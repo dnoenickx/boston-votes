@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Boston Votes</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="description" content="Explore election results of Boston municipal elections">
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#012030">
+    <meta name="msapplication-TileColor" content="#2d89ef">
+    <meta name="theme-color" content="#ffffff">
+
+    <!-- MapBox -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora&family=Montserrat:wght@300;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <link href="/dist/output.css" rel="stylesheet">
+
+    <!-- D3 -->
+    <script src='//d3js.org/d3.v3.min.js' charset='utf-8'></script>
+
+    <!-- Turf.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@latest"></script>
+</head>
+
+<body>
+    <div class="bg-amber-500 bg-green-400 bg-blue-500 bg-purple-400 bg-rose-500 bg-yellow-300 bg-cyan-300 bg-slate-400"></div>
+
+    <div id="map" class="h-screen w-[calc(100%-18rem)] bg-lime-400"></div>
+
+
+    <aside id="sidebar"
+        class="fixed top-0 right-0 z-40 w-72 h-screen transition-transform -translate-x-full sm:translate-x-0"
+        aria-label="Sidebar">
+        <div class="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800 relative flex flex-col">
+            <h1 class="block mb-4 text-3xl font-montserrat font-semibold text-gray-900 dark:text-white">
+                <span class="underline underline-offset-8 decoration-red-500 decoration-4">BOSTON</span> VOTES
+            </h1>
+            <p class="text-gray-400 text-sm mb-4 italic">*not affiliated with the City of Boston</p>
+            <ul class="space-y-2 font-medium">
+                <li>
+                    <label for="election-select"
+                        class="block mb-2 text-md font-medium text-gray-900 dark:text-white">Election</label>
+                    <select id="election-select"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        <option selected>Choose an election</option>
+                        <option value="US">United States</option>
+                    </select>
+                </li>
+                <li>
+                    <label for="race-select"
+                        class="block mb-2 text-md font-medium text-gray-900 dark:text-white">Race</label>
+                    <select id="race-select"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        <option selected>Choose a race</option>
+                    </select>
+                </li>
+            </ul>
+            <hr class="h-px my-6 bg-gray-200 border-0 dark:bg-gray-700">
+            <ul id="candidate-results"> </ul>
+        </div>
+    </aside>
+</body>
+
+<script src="index.js"></script>
+
+</html>
