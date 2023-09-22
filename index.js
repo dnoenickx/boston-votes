@@ -73,7 +73,7 @@ function shuffle(array) {
 }
 
 function updateVisualization() {
-    let url = `/data/${selectedElection}-${selectedRace}.json`;
+    let url = `data/${selectedElection}-${selectedRace}.json`;
     fetchOrCache(url).then(response => {
         response.json().then(json => {
             generateCandidateList(json["summary"]);
@@ -161,7 +161,7 @@ var selectedRace = null;
 
 var electionsList = null;
 
-fetchOrCache('/data/list_elections.json').then(response => {
+fetchOrCache('data/list_elections.json').then(response => {
     response.json().then(json => {
         electionsList = json;
         electionSelect.innerHTML = generateSelectOptions(electionsList.map(e => ({ value: e["date"], text: e["title"] })), "Choose an election");
