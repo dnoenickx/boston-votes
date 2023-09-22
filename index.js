@@ -73,7 +73,7 @@ function shuffle(array) {
 }
 
 function updateVisualization() {
-    let url = `data/${selectedElection}-${selectedRace}.json`;
+    let url = `./data/${selectedElection}-${selectedRace}.json`;
     fetchOrCache(url).then(response => {
         response.json().then(json => {
             generateCandidateList(json["summary"]);
