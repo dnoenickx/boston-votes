@@ -55,67 +55,66 @@ function randomPoints(count, polygon, properties) {
 }
 
 function shuffle(array) {
-    let currentIndex = array.length,  randomIndex;
-  
+    let currentIndex = array.length, randomIndex;
+
     // While there remain elements to shuffle.
     while (currentIndex > 0) {
-  
-      // Pick a remaining element.
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex--;
-  
-      // And swap it with the current element.
-      [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex], array[currentIndex]];
+
+        // Pick a remaining element.
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+
+        // And swap it with the current element.
+        [array[currentIndex], array[randomIndex]] = [
+            array[randomIndex], array[currentIndex]];
     }
-  
+
     return array;
-  }
+}
 
 function updateVisualization() {
-
     let url = `/data/${selectedElection}-${selectedRace}.json`;
-    fetchAndCacheDataForSession(url).then((raceData) => {
-        generateCandidateList(raceData["summary"]);
+    fetchOrCache(url).then(response => {
+        response.json().then(json => {
+            generateCandidateList(json["summary"]);
 
-        let precinctPoints = [];
-        for (let p of raceData["precincts"]) {
-            let { ward, precinct, votes_cast } = p;
-            let polygon = precincts.features.find(x => x["properties"]["precinct"] == precinct & x["properties"]["ward"] == ward);
+            let precinctPoints = [];
+            for (let p of json["precincts"]) {
+                let { ward, precinct, votes_cast } = p;
+                let polygon = precincts.features.find(x => x["properties"]["precinct"] == precinct & x["properties"]["ward"] == ward);
 
-            if (polygon === undefined) {
-                console.log(`Skipping. (ward: ${ward} precinct: ${precinct})`);
-                continue;
+                if (polygon === undefined) {
+                    console.log(`Skipping. (ward: ${ward} precinct: ${precinct})`);
+                    continue;
+                }
+
+                for (let candIndex = 0; candIndex < p["candidates"].length; candIndex += 1)
+                    precinctPoints = [...precinctPoints, ...randomPoints(p["candidates"][candIndex]["votes"], polygon, { "candidate": candIndex })];
             }
-
-            for (let candIndex = 0; candIndex < p["candidates"].length; candIndex += 1)
-                precinctPoints = [...precinctPoints, ...randomPoints(p["candidates"][candIndex]["votes"], polygon, {"candidate": candIndex})];
-        }
-        dotDensity = turf.featureCollection(shuffle(precinctPoints));
-        map.getSource('dotDensity').setData(dotDensity);
+            dotDensity = turf.featureCollection(shuffle(precinctPoints));
+            map.getSource('dotDensity').setData(dotDensity);
+        })
     });
 }
 
+async function fetchOrCache(url) {
+    try {
+        // Check if the URL is cached
+        const cache = await caches.open('my-cache');
+        const cachedResponse = await cache.match(url);
+        if (cachedResponse) {
+            return cachedResponse;
+        }
 
-async function fetchAndCacheDataForSession(url) {
-    const cacheKey = `cache_${url}`;
-    // const cachedData = sessionStorage.getItem(cacheKey);
-    // if (cachedData) {
-    //     const parsedData = JSON.parse(cachedData);
-    //     // console.log('Using cached data for URL:', url, parsedData);
-    //     return parsedData;
-    // }
-    return fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            sessionStorage.setItem(cacheKey, JSON.stringify(data));
-            console.log('Fetched and cached data for URL:', url, data);
-            return data;
-        })
-        .catch(error => {
-            console.error('Error fetching data for URL:', url, error);
-            return null;
-        });
+        // If not cached, fetch the URL
+        const response = await fetch(url);
+        const clonedResponse = response.clone();
+        await cache.put(url, clonedResponse);
+        return response;
+    } catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
 }
 
 function generateSelectOptions(options, defaultOption, selectValue) {
@@ -133,9 +132,11 @@ function electionDidChange(event) {
     selectedElection = event.target.value;
 
     let geometryURL = electionsList.find(x => x["date"] == selectedElection)["geometry"];
-    fetchAndCacheDataForSession(geometryURL).then((precinctsGeoJSON) => {
-        precincts = precinctsGeoJSON;
-        map.getSource('precincts').setData(precincts);
+    fetchOrCache(geometryURL).then(response => {
+        response.json().then(json => {
+            precincts = json;
+            map.getSource('precincts').setData(precincts);
+        })
     });
 
     const election = electionsList.filter(e => e['date'] === selectedElection)[0];
@@ -160,11 +161,12 @@ var selectedRace = null;
 
 var electionsList = null;
 
-fetchAndCacheDataForSession('/data/list_elections.json').then((res) => {
-    electionSelect.innerHTML = generateSelectOptions(res.map(e => ({ value: e["date"], text: e["title"] })), "Choose an election");
-    electionsList = res;
-}
-);
+fetchOrCache('/data/list_elections.json').then(response => {
+    response.json().then(json => {
+        electionsList = json;
+        electionSelect.innerHTML = generateSelectOptions(electionsList.map(e => ({ value: e["date"], text: e["title"] })), "Choose an election");
+    })
+});
 
 document.getElementById('election-select').addEventListener('change', electionDidChange);
 document.getElementById('race-select').addEventListener('change', raceDidChange);
