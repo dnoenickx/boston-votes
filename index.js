@@ -73,7 +73,7 @@ function shuffle(array) {
 }
 
 function updateVisualization() {
-    let url = `./data/${selectedElection}-${selectedRace}.json`;
+    let url = `./data/${getSelectedElection()}-${getSelectedRace()}.json`;
     fetchOrCache(url).then(response => {
         response.json().then(json => {
             generateCandidateList(json["summary"]);
@@ -117,65 +117,59 @@ async function fetchOrCache(url) {
     }
 }
 
-function generateSelectOptions(options, defaultOption, selectValue) {
+function generateSelectOptions(options, selectValue) {
     let selectValueExists = selectValue ? options.some(({ value }) => value == selectValue) : false;
     let html = '';
-    if (defaultOption !== undefined)
-        html += `<option ${selectValueExists ? "" : "selected"} value="default">${defaultOption}</option>`;
     options.forEach(({ value, text }) => {
         html += `<option ${value == selectValue ? "selected" : ""} value="${value}">${text}</option>`;
     });
     return [html, selectValueExists];
 }
 
-function electionDidChange(event) {
-    selectedElection = event.target.value;
+async function electionDidChange(event) {
+    let geometryURL = electionsList.find(x => x["date"] == getSelectedElection())["geometry"];
+    precincts = await (await fetchOrCache(geometryURL)).json();
+    map.getSource('precincts').setData(precincts);
 
-    let geometryURL = electionsList.find(x => x["date"] == selectedElection)["geometry"];
-    fetchOrCache(geometryURL).then(response => {
-        response.json().then(json => {
-            precincts = json;
-            map.getSource('precincts').setData(precincts);
-        })
-    });
+    const election = electionsList.filter(e => e['date'] === getSelectedElection())[0];
 
-    const election = electionsList.filter(e => e['date'] === selectedElection)[0];
-
-    const selectedRace = raceSelect.options[raceSelect.selectedIndex].value;
-    const [html, selectionMaintained] = generateSelectOptions(election["races"].map(r => ({ value: r["district"], text: r["title"] })), "Choose a race", selectedRace);
+    const [html, selectionMaintained] = generateSelectOptions(election["races"].map(r => ({ value: r["district"], text: r["title"] })), getSelectedRace());
     raceSelect.innerHTML = html;
     if (selectionMaintained)
         updateVisualization();
 };
 
-function raceDidChange(event) {
-    selectedRace = event.target.value;
-    updateVisualization();
-};
+function getSelectedElection(){
+    let index = electionSelect.selectedIndex;
+    return index === -1 ? null : electionSelect.options[index].value;
+}
+
+function getSelectedRace(){
+    let index = raceSelect.selectedIndex;
+    return index === -1 ? null : raceSelect.options[index].value;
+}
 
 const electionSelect = document.getElementById('election-select');
 const raceSelect = document.getElementById('race-select');
-
-var selectedElection = null;
-var selectedRace = null;
 
 var electionsList = null;
 
 fetchOrCache('data/list_elections.json').then(response => {
     response.json().then(json => {
         electionsList = json;
-        electionSelect.innerHTML = generateSelectOptions(electionsList.map(e => ({ value: e["date"], text: e["title"] })), "Choose an election");
+        electionSelect.innerHTML = generateSelectOptions(electionsList.map(e => ({ value: e["date"], text: e["title"] })));
+
     })
 });
 
 document.getElementById('election-select').addEventListener('change', electionDidChange);
-document.getElementById('race-select').addEventListener('change', raceDidChange);
+document.getElementById('race-select').addEventListener('change', updateVisualization);
 
 
 var dotDensity = turf.featureCollection([]);
 var precincts = turf.featureCollection([]);
 
-map.on('style.load', () => {
+function loadLayers(){
 
     // Find the index of the first symbol layer in the map style.
     const layers = map.getStyle().layers;
@@ -285,6 +279,17 @@ map.on('style.load', () => {
         }
         hoveredWardPrecint = null;
     });
+};
 
 
+map.on('style.load', () => {
+    const waiting = () => {
+      if (!map.isStyleLoaded()) {
+        setTimeout(waiting, 200);
+      } else {
+        loadLayers();
+        electionDidChange().then(updateVisualization);
+      }
+    };
+    waiting();
 });

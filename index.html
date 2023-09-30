@@ -31,6 +31,9 @@
 
     <!-- Turf.js -->
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@latest"></script>
+
+    <!--  Index -->
+    <script defer src="./index.js"></script>
 </head>
 
 <body>
@@ -53,8 +56,6 @@
                         class="block mb-2 text-md font-medium text-gray-900 dark:text-white">Election</label>
                     <select id="election-select"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                        <option selected>Choose an election</option>
-                        <option value="US">United States</option>
                     </select>
                 </li>
                 <li>
@@ -62,7 +63,6 @@
                         class="block mb-2 text-md font-medium text-gray-900 dark:text-white">Race</label>
                     <select id="race-select"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                        <option selected>Choose a race</option>
                     </select>
                 </li>
             </ul>
@@ -71,7 +71,4 @@
         </div>
     </aside>
 </body>
-
-<script src="./index.js"></script>
-
 </html>
