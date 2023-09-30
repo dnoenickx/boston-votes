@@ -93,6 +93,7 @@ function updateVisualization() {
             }
             dotDensity = turf.featureCollection(shuffle(precinctPoints));
             map.getSource('dotDensity').setData(dotDensity);
+            map.fitBounds(turf.bbox(dotDensity), {padding: 50});
         })
     });
 }
